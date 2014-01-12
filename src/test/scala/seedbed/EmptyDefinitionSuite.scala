@@ -31,7 +31,7 @@ class EmptyDefinitionSuite extends fixture.FunSuite with ShouldMatchers with Opt
       s.define("album")
       test(s)
     } finally {
-      s.cleanAll()
+      s.clearAll()
     }
   }
 

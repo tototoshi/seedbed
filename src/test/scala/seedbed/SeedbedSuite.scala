@@ -43,7 +43,7 @@ class SeedbedSuite extends fixture.FunSuite with ShouldMatchers with OptionValue
 
       test(s)
     } finally {
-      s.cleanAll()
+      s.clearAll()
     }
   }
 
@@ -69,7 +69,7 @@ class SeedbedSuite extends fixture.FunSuite with ShouldMatchers with OptionValue
   test("#clean") { s =>
     s.create("beatles")
     s.create("album")
-    s.clean("beatles")
+    s.clear("beatles")
     s.list("beatles") should be(empty)
     s.list("album") should not be empty
   }
@@ -78,7 +78,7 @@ class SeedbedSuite extends fixture.FunSuite with ShouldMatchers with OptionValue
     s.create("beatles")
     s.create("beatles")
     s.create("beatles")
-    s.cleanAll()
+    s.clearAll()
     s.list("beatles") should be(empty)
   }
 

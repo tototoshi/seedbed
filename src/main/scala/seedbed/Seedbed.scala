@@ -59,7 +59,7 @@ trait Seedbed { self: Configuration =>
     }
   }
 
-  def clean(name: String): Unit = {
+  def clear(name: String): Unit = {
     withConnection(getConnection) { conn =>
       blueprints.get(name).foreach { bp =>
         DBUtil.deleteAll(conn, bp.name)
@@ -67,7 +67,7 @@ trait Seedbed { self: Configuration =>
     }
   }
 
-  def cleanAll(): Unit = {
+  def clearAll(): Unit = {
     withConnection(getConnection) {
       conn =>
         blueprints.keys.foreach {
