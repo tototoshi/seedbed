@@ -78,6 +78,7 @@ private[seedbed] object DBUtil {
   }
 
   def bindValue(values: Seq[Any], stmt: PreparedStatement) {
+
     def millisToSqlType(d: { def getTime(): Long }): java.sql.Date = {
       import java.util.Calendar
       val cal = Calendar.getInstance()
@@ -93,10 +94,15 @@ private[seedbed] object DBUtil {
     values.foreach {
       v =>
         v match {
-          case v: String => stmt.setString(index, v)
           case v: Int => stmt.setInt(index, v)
+          case v: Short => stmt.setShort(index, v)
           case v: Long => stmt.setLong(index, v)
           case v: Float => stmt.setFloat(index, v)
+          case v: Double => stmt.setDouble(index, v)
+          case v: String => stmt.setString(index, v)
+          case v: java.math.BigDecimal => stmt.setBigDecimal(index, v)
+          case v: java.sql.Time => stmt.setTime(index, v)
+          case v: java.sql.Timestamp => stmt.setTimestamp(index, v)
           case v: java.sql.Date => stmt.setDate(index, v)
           case v: java.util.Date => stmt.setDate(index, millisToSqlType(v))
           case _ => new UnsupportedTypeException("Not supported type")
