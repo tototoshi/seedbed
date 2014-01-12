@@ -32,7 +32,7 @@ trait TestDBConfiguration extends Configuration {
 }
 ```
 
-```sql
+```scala
 /*
 Imagine that you have a table like this.
 CREATE table beatles (
