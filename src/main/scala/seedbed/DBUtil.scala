@@ -16,7 +16,7 @@
 
 package seedbed
 
-import java.sql.{ DriverManager, PreparedStatement, Connection }
+import java.sql.{ Timestamp, DriverManager, PreparedStatement, Connection }
 import scala.collection.mutable.{ Map => MutableMap, Set => MutableSet }
 
 private[seedbed] object DBUtil {
@@ -104,7 +104,7 @@ private[seedbed] object DBUtil {
           case v: java.sql.Time => stmt.setTime(index, v)
           case v: java.sql.Timestamp => stmt.setTimestamp(index, v)
           case v: java.sql.Date => stmt.setDate(index, v)
-          case v: java.util.Date => stmt.setDate(index, millisToSqlType(v))
+          case v: java.util.Date => stmt.setTimestamp(index, new Timestamp(v.getTime))
           case _ => new UnsupportedTypeException("Not supported type")
         }
         index += 1
