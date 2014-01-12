@@ -44,6 +44,8 @@ CREATE table beatles (
 );
 */
 
+import seedbed._
+
 // create a seedbed instance
 val s = new Seedbed with TestDBConfiguration
 
