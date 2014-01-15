@@ -13,7 +13,7 @@ This project is inspired by factory_girl or phactory.
 ```scala
 resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 
-libraryDependencies += Seq(
+libraryDependencies ++= Seq(
   "com.github.tototoshi" %% "seedbed" % "0.1.0-SNAPSHOT",
   // and database driver
 )
