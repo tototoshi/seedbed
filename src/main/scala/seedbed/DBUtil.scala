@@ -16,8 +16,9 @@
 
 package seedbed
 
-import java.sql.{ Timestamp, DriverManager, PreparedStatement, Connection }
+import java.sql._
 import scala.collection.mutable.{ Map => MutableMap, Set => MutableSet }
+import seedbed.Column
 
 private[seedbed] object DBUtil {
 
@@ -68,13 +69,15 @@ private[seedbed] object DBUtil {
     primaryKeys.toSet
   }
 
-  def getGeneratedKey(stmt: PreparedStatement): Long = {
-    var generatedKey: Long = -1
+  def getGeneratedKey(stmt: PreparedStatement, columns: Set[Column]): Map[String, Any] = {
+    val generatedKey: MutableMap[String, Any] = MutableMap.empty
     val rs = stmt.getGeneratedKeys
     while (rs.next()) {
-      generatedKey = rs.getLong(1)
+      columns.foreach { col =>
+        generatedKey += col.name -> extract(rs, col.jdbcType, col.name)
+      }
     }
-    generatedKey
+    generatedKey.toMap
   }
 
   def bindValue(values: Seq[Any], stmt: PreparedStatement) {
@@ -118,6 +121,48 @@ private[seedbed] object DBUtil {
   def createWhereCondition(columns: Map[String, Any], cols: Seq[String]): String = {
     if (columns.isEmpty) ""
     else cols.map { c => s"$c = ?" }.mkString("WHERE ", " AND ", "")
+  }
+
+  def extract(rs: ResultSet, tpe: Int, colName: String): Any = {
+    tpe match {
+      case java.sql.Types.ARRAY => rs.getArray(colName)
+      case java.sql.Types.BIGINT => rs.getLong(colName)
+      case java.sql.Types.BINARY => rs.getBytes(colName)
+      case java.sql.Types.BIT => rs.getByte(colName)
+      case java.sql.Types.BLOB => rs.getBlob(colName)
+      case java.sql.Types.BOOLEAN => rs.getBoolean(colName)
+      case java.sql.Types.CHAR => rs.getString(colName)
+      case java.sql.Types.CLOB => rs.getClob(colName)
+      case java.sql.Types.DATALINK => new UnsupportedTypeException("not supported")
+      case java.sql.Types.DATE => rs.getDate(colName)
+      case java.sql.Types.DECIMAL => rs.getBigDecimal(colName)
+      case java.sql.Types.DISTINCT => new UnsupportedTypeException("not supported")
+      case java.sql.Types.DOUBLE => rs.getDouble(colName)
+      case java.sql.Types.FLOAT => rs.getFloat(colName)
+      case java.sql.Types.INTEGER => rs.getInt(colName)
+      case java.sql.Types.JAVA_OBJECT => rs.getObject(colName)
+      case java.sql.Types.LONGNVARCHAR => rs.getString(colName)
+      case java.sql.Types.LONGVARBINARY => rs.getBytes(colName)
+      case java.sql.Types.LONGVARCHAR => rs.getString(colName)
+      case java.sql.Types.NCHAR => rs.getString(colName)
+      case java.sql.Types.NCLOB => rs.getClob(colName)
+      case java.sql.Types.NULL => null
+      case java.sql.Types.NUMERIC => rs.getInt(colName)
+      case java.sql.Types.NVARCHAR => rs.getString(colName)
+      case java.sql.Types.OTHER => new UnsupportedTypeException("not supported")
+      case java.sql.Types.REAL => new UnsupportedTypeException("not supported")
+      case java.sql.Types.REF => new UnsupportedTypeException("not supported")
+      case java.sql.Types.ROWID => new UnsupportedTypeException("not supported")
+      case java.sql.Types.SMALLINT => rs.getInt(colName)
+      case java.sql.Types.SQLXML => new UnsupportedTypeException("not supported")
+      case java.sql.Types.STRUCT => new UnsupportedTypeException("not supported")
+      case java.sql.Types.TIME => rs.getTime(colName)
+      case java.sql.Types.TIMESTAMP => rs.getTimestamp(colName)
+      case java.sql.Types.TINYINT => rs.getInt(colName)
+      case java.sql.Types.VARBINARY => rs.getBytes(colName)
+      case java.sql.Types.VARCHAR => rs.getString(colName)
+      case _ => new UnsupportedTypeException("Unknown type")
+    }
   }
 
 }

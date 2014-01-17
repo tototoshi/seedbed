@@ -36,6 +36,12 @@ object TestHelper {
         |  name varchar(30) NOT NULL,
         |  released_date date NOT NULL
         |);
+        |
+        |CREATE TABLE song (
+        |  name text NOT NULL,
+        |  album_id integer NOT NULL,
+        |  PRIMARY KEY (name, album_id)
+        |);
       """.stripMargin
     } else {
       """
@@ -52,7 +58,13 @@ object TestHelper {
         |  name varchar(30) NOT NULL,
         |  released_date date NOT NULL
         |);
-      """.stripMargin
+        |
+        |CREATE TABLE song (
+        |  name text NOT NULL,
+        |  album_id integer NOT NULL,
+        |  PRIMARY KEY (name, album_id)
+        |);
+        |""".stripMargin
     }
     val stmt = conn.prepareStatement(sql)
     stmt.execute()
@@ -64,6 +76,7 @@ object TestHelper {
       """
         |DROP TABLE beatles;
         |DROP TABLE album;
+        |DROP TABLE song;
       """.stripMargin
     val stmt = conn.prepareStatement(sql)
     stmt.execute()

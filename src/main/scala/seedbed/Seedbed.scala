@@ -47,11 +47,16 @@ trait Seedbed { self: Configuration =>
         val stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
         DBUtil.bindValue(values, stmt)
         stmt.executeUpdate()
-        val generatedKey = DBUtil.getGeneratedKey(stmt)
+
+        val generatedKeys =
+          DBUtil.getGeneratedKey(stmt, blueprint.tableInfo.primaryKeys)
 
         val table = blueprint.tableInfo
         if (table.hasAutoIncrementColumn) {
-          get(name, Map(table.autoIncrementColumns.head.name -> generatedKey)).getOrElse(throw new PersistenceException(s"INSERT to $name failed"))
+          val autoIncrementColumns = table.autoIncrementColumns.map { c =>
+            c.name -> generatedKeys(c.name)
+          }
+          get(name, autoIncrementColumns.toMap).getOrElse(throw new PersistenceException(s"INSERT to $name failed"))
         } else {
           columnAndValues
         }
@@ -119,53 +124,10 @@ trait Seedbed { self: Configuration =>
   }
 
   private[this] def mapRow(blueprint: Blueprint, rs: ResultSet): Map[String, Any] = {
-    def extract(tpe: Int, colName: String): Any = {
-      tpe match {
-        case java.sql.Types.ARRAY => rs.getArray(colName)
-        case java.sql.Types.BIGINT => rs.getLong(colName)
-        case java.sql.Types.BINARY => rs.getBytes(colName)
-        case java.sql.Types.BIT => rs.getByte(colName)
-        case java.sql.Types.BLOB => rs.getBlob(colName)
-        case java.sql.Types.BOOLEAN => rs.getBoolean(colName)
-        case java.sql.Types.CHAR => rs.getString(colName)
-        case java.sql.Types.CLOB => rs.getClob(colName)
-        case java.sql.Types.DATALINK => new UnsupportedTypeException("not supported")
-        case java.sql.Types.DATE => rs.getDate(colName)
-        case java.sql.Types.DECIMAL => rs.getBigDecimal(colName)
-        case java.sql.Types.DISTINCT => new UnsupportedTypeException("not supported")
-        case java.sql.Types.DOUBLE => rs.getDouble(colName)
-        case java.sql.Types.FLOAT => rs.getFloat(colName)
-        case java.sql.Types.INTEGER => rs.getInt(colName)
-        case java.sql.Types.JAVA_OBJECT => rs.getObject(colName)
-        case java.sql.Types.LONGNVARCHAR => rs.getString(colName)
-        case java.sql.Types.LONGVARBINARY => rs.getBytes(colName)
-        case java.sql.Types.LONGVARCHAR => rs.getString(colName)
-        case java.sql.Types.NCHAR => rs.getString(colName)
-        case java.sql.Types.NCLOB => rs.getClob(colName)
-        case java.sql.Types.NULL => null
-        case java.sql.Types.NUMERIC => rs.getInt(colName)
-        case java.sql.Types.NVARCHAR => rs.getString(colName)
-        case java.sql.Types.OTHER => new UnsupportedTypeException("not supported")
-        case java.sql.Types.REAL => new UnsupportedTypeException("not supported")
-        case java.sql.Types.REF => new UnsupportedTypeException("not supported")
-        case java.sql.Types.ROWID => new UnsupportedTypeException("not supported")
-        case java.sql.Types.SMALLINT => rs.getInt(colName)
-        case java.sql.Types.SQLXML => new UnsupportedTypeException("not supported")
-        case java.sql.Types.STRUCT => new UnsupportedTypeException("not supported")
-        case java.sql.Types.TIME => rs.getTime(colName)
-        case java.sql.Types.TIMESTAMP => rs.getTimestamp(colName)
-        case java.sql.Types.TINYINT => rs.getInt(colName)
-        case java.sql.Types.VARBINARY => rs.getBytes(colName)
-        case java.sql.Types.VARCHAR => rs.getString(colName)
-        case _ => new UnsupportedTypeException("Unknown type")
-      }
-    }
-
     blueprint.tableInfo.columns.foldLeft(Map.empty[String, Any]) {
       case (result, Column(colName, tpe, _, _, _)) =>
-        val value = extract(tpe, colName)
-        if (value != null) result + (colName -> extract(tpe, colName)) else result
-
+        val value = DBUtil.extract(rs, tpe, colName)
+        if (value != null) result + (colName -> DBUtil.extract(rs, tpe, colName)) else result
     }
   }
 
